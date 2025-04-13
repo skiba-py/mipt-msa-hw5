@@ -1,34 +1,34 @@
+import re
+import time
+
 import requests
+from collections import Counter
 
-def get_text(url):
-    response = requests.get(url)
-    return response.text
 
-def count_word_frequencies(url, word):
-    text = get_text(url)
-    words = text.split()
-    count = 0
-    for w in words:
-        if w == word:
-            count += 1
-    return count
+def normalize_text(text):
+    words = re.findall(r"\b\w+'\w+|\w+\b", text)
+    return words
+
 
 def main():
     words_file = "words.txt"
     url = "https://eng.mipt.ru/why-mipt/"
 
-    words_to_count = []
-    with open(words_file, 'r') as file:
-        for line in file:
-            word = line.strip()
-            if word:
-                words_to_count.append(word)
+    start = time.perf_counter()
 
-    frequencies = {}
-    for word in words_to_count:
-        frequencies[word] = count_word_frequencies(url, word)
+    with open(words_file, 'r') as file:
+        words_to_count = [line.strip() for line in file]
+
+    text = requests.get(url).text
+    words = normalize_text(text)
+    counter = Counter(words)
+    frequencies = {word: counter.get(word, 0) for word in words_to_count}
+
+    end = time.perf_counter()
+    print(f"Время выполнения: {end - start:.6f} секунд")
 
     print(frequencies)
+    print(counter.total())
 
 if __name__ == "__main__":
     main()
